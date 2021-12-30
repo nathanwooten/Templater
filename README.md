@@ -4,7 +4,7 @@ A simple template engine.
 ```php
 use nathanwooten\Templater\Templater;
 
-$templater = new Templater( 'path/to/templates', [ '{{', '}}' ] );
+$templater = new Templater( null, 'path/to/templates', [ '{{', '}}' ] );
 
 $templates = [
     'page' => 'page.php',
@@ -37,7 +37,7 @@ Using arrays for variables, as you may when extracting data from a database:
 ```php
 use nathanwooten\Templater\Templater;
 
-$templater = new Templater( 'path/to/templates', [ '{{', '}}' ] );
+$templater = new Templater( 'optionalName', 'path/to/templates', [ '{{', '}}' ] );
 $templater->setVariable( 'content', [ 'title' => 'This is a Title', 'content' => 'This is the Content' ] );
 
 ```
@@ -65,7 +65,7 @@ Now, let's say you want to replace variables before templates in all your templa
 ```php
 use nathanwooten\Templater\Templater;
 
-$templater = new Templater( 'path/to/templates', [ '{{', '}}' ] );
+$templater = new Templater( 'optionalName', 'path/to/templates', [ '{{', '}}' ] );
 
 foreach( $templater->getTemplates() as $template ) {
 
