@@ -95,7 +95,7 @@ if ( '/' === $title ) {
 }
 ```
 
-This code works perfectly well, so long as the title variable is set in the templater.
+This code works perfectly well, so long as the template is set and the title variable is set, in the templater.
 
 ```php
 ...
