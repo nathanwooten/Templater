@@ -67,10 +67,12 @@ use nathanwooten\Templater\Templater;
 
 $templater = new Templater( 'path/to/templates', [ '{{', '}}' ] );
 
-$baseTemplate = $templater->getTemplate();
+foreach( $templater->getTemplates() as $template ) {
 
-$baseTemplate = $templater->compileTemplate( $baseTemplate, $templater->getVariables() );
-$baseTemplate = $templater->compileTemplate( $baseTemplate, $templater->getTemplates() );
+    $templates[] = $templater->compileTemplate( $template, $templater->getVariables() );
+}
+
+$baseTemplate = $templater->compileTemplate( $baseTemplate, $templates );
 
 print $baseTemplate;
 
