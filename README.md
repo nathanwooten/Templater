@@ -31,3 +31,31 @@ $baseTemplate = $templater();
 print $baseTemplate;
 
 ```
+
+Using arrays for variables, as you may when extracting data from a database:
+
+```php
+use nathanwooten\Templater\Templater;
+
+$templater = new Templater( 'path/to/templates', [ '{{', '}}' ] );
+$templater->setVariable( 'content', [ 'title' => 'This is a Title', 'content' => 'This is the Content' ] );
+
+```
+
+Now in the template, with the above settings, you would use the following to access your variables:
+
+```
+<h1>{{content.title}}</h1>
+
+<div>{{content.content}}</div>
+```
+
+If you were using objects created from your databaser, you could do this:
+
+```
+<h1>{{content.getTitle()}}</h1>
+
+<div>{{content.content}}</div>
+```
+
+Notice either syntax above works, the first content.getTitle() calls the getTitle method of the content object, where content.content gets the content property of the content object.
