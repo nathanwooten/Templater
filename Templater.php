@@ -51,7 +51,7 @@ class Templater {
 
 	public $handle = 1;
 
-	public function __construct( $templates_dir, array $delimiters )
+	public function __construct( $templates_dir, array $delimiters = null )
 	{
 
 		try {
