@@ -75,3 +75,30 @@ $baseTemplate = $templater->compileTemplate( $baseTemplate, $templater->getTempl
 print $baseTemplate;
 
 ```
+
+If you want to include PHP code in your templates, it will be parsed as PHP code before it is finished compiling and all of the templates and variables in the templater are made available to the template script.
+
+In a template...
+
+```
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title><?php
+if ( TITLE === HOME ) {
+    print 'example.com';
+} else {
+    print $title . ' @ example.com';
+}
+```
+
+This code works perfectly well, so long as the title variable is set in the templater.
+
+```php
+...
+
+$templater->setVariable( 'title', $request->getRequestTarget() );
+
+...
+```
