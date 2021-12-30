@@ -14,7 +14,13 @@ use nathanwooten\{
 
 require_once dirname( __FILE__ ) . DIRECTORY_SEPARATOR . 'index.php';
 
-class Templater {
+class Templater implements TemplaterItemInterface {
+
+	/**
+	 * The optional name of the templater
+	 */
+
+	public $name = null;
 
 	/**
 	 * This is the compiled base template
@@ -23,8 +29,20 @@ class Templater {
 	 * and it's output gets stored here
 	 */
 
-	protected $compiled;
+	protected $compiled = null;
+
+	/**
+	 * This is an associative array
+	 * of template objects
+	 */
+
 	protected $templates = [];
+
+	/**
+	 * This is an associate array
+	 * of variable objects
+	 */
+
 	protected $variables = [];
 
 	/**
@@ -51,8 +69,21 @@ class Templater {
 
 	public $handle = 1;
 
-	public function __construct( $templates_dir, array $delimiters = null )
+	/**
+	 * All parameters optional but recommended,
+	 * the name, templates_dir and delimiters
+	 * can be provided, if delimiters aren't provided
+	 * the templater will not know
+	 * how to parse your tags and you will have to
+	 * rely on PHP in your templates for variables.
+	 */
+
+	public function __construct( $name = null, $templates_dir = '', array $delimiters = null )
 	{
+
+		if ( ! is_null( $name ) ) {
+			$this->name = $name;
+		}
 
 		try {
 			if ( ! is_dir( $templates_dir ) || ! is_readable( $templates_dir ) ) {
@@ -66,6 +97,31 @@ class Templater {
 		$this->delimiters = $delimiters;
 
 	}
+
+	/**
+	 * This is a TemplaterItemInterface object,
+	 * therefore, it can be added as a template,
+	 * to another templater.
+	 */
+
+	public function get()
+	{
+
+		$templater = $this;
+		$compiled = $templater();
+
+		return $compiled;
+
+	}
+
+	/**
+	 * Set a template, in the form of,
+	 * a template object, a template string, or
+	 * a filename/directory-filename.
+	 * If the directory of the templater is not set,
+	 * at compile time, the input here intended to be files,
+	 * will have to be absolute-readable directory-filenames
+	 */
 
 	public function setTemplate( $name, $template, array $variables = [] )
 	{
@@ -87,6 +143,13 @@ class Templater {
 		return $this;
 
 	}
+
+	/**
+	 * Retrieve a template by name, defaults to 'base' template
+	 * for retrieval by templater invocation. You can however,
+	 * fetch any template you want as long as the provided name,
+	 * exists in the keys of the templates property.
+	 */
 
 	public function getTemplate( $name = 'base', array $templates = [] ) {
 
@@ -113,6 +176,11 @@ class Templater {
 
 	}
 
+	/**
+	 * Set an array of templates,
+	 * return this.
+	 */
+
 	public function setTemplates( array $templates )
 	{
 
@@ -123,6 +191,11 @@ class Templater {
 		return $this;
 
 	}
+
+	/**
+	 * Fetch all templates as an associative array, of either
+	 * template objects or a resolved strings.
+	 */
 
 	public function getTemplates( $string = 0 ) {
 
@@ -140,6 +213,13 @@ class Templater {
 
 	}
 
+	/**
+	 * Set a variable with object, or value input
+	 * Variables do not have to resolve to strings,
+	 * however they are not parsed like templates
+	 * are and are expected to provide data as-is.
+	 */
+
 	public function setVariable( $name, $value = null )
 	{
 
@@ -156,14 +236,24 @@ class Templater {
 
 	}
 
-	public function getVariable( $name, TemplateInterface $in = null )
+	/**
+	 * Get a variable from the variables array,
+	 * by name returning null if name does not
+	 * exist in the array
+	 */
+
+	public function getVariable( $name )
 	{
 
-		$in = isset( $in ) ? $in : $this;
-
-		return array_key_exists( $name, $in->variables ) ? $in->variables[ $name ] : null;
+		return array_key_exists( $name, $this->variables ) ? $this->variables[ $name ] : null;
 
 	}
+
+	/**
+	 * Set an array of variables,
+	 * providing an associative array
+	 * of valid variable input
+	 */
 
 	public function setVariables( array $vars = [] )
 	{
@@ -176,6 +266,10 @@ class Templater {
 
 	}
 
+	/**
+	 * Get all of the templater variables
+	 */
+
 	public function getVariables()
 	{
 
@@ -183,12 +277,17 @@ class Templater {
 
 	}
 
-	public function compile( $template )
+	/**
+	 * Compile a template, including replacing
+	 * tags with templates and variables and 
+	 * running the PHP in the template and capturing
+	 * the ouput and saving it to a file.
+	 */
+
+	public function compile( TemplateItemInterface $item, $id = null, $containsPhp = false )
 	{
 
-		if ( $template instanceof Template ) {
-			$template = $template->getTemplate();
-		}
+		$templateString = $item->get( $id );
 
 		$input = array_merge( $this->getVariables(), $this->getTemplates() );
 
@@ -220,6 +319,13 @@ class Templater {
 		return $rendered;
 
 	}
+
+	/**
+	 * Perform all non-PHP parsing
+	 * compile operations including,
+	 * replacing tags and also, very importantly,
+	 * parsing interior templates
+	 */
 
 	public function compileTemplate( $template, array $input = [], $strip = true )
 	{
@@ -267,6 +373,11 @@ class Templater {
 
 	}
 
+	/**
+	 * Perform a name, value, template replace operation
+	 * Only takes string input.
+	 */
+
 	public function compileReplace( $name, $value, $template )
 	{
 
@@ -280,6 +391,14 @@ class Templater {
 		return $template;
 
 	}
+
+	/**
+	 * Match a tag or all tags,
+	 * in the given template,
+	 * using the delimiters that
+	 * have already been provided
+	 * to the templater.
+	 */
 
 	public function match( $template, $specific = null )
 	{
@@ -295,6 +414,11 @@ class Templater {
 
 	}
 
+	/**
+	 * Delimit a name with option for use with,
+	 * regex or names.
+	 */
+
 	public function delimit( $name, $delimiters = [], $tag = 0 )
 	{
 
@@ -306,6 +430,11 @@ class Templater {
 
 	}
 
+	/**
+	 * Remove delimiters from tag
+	 * making it a name.
+	 */
+
 	public function remove( $delimited )
 	{
 
@@ -313,6 +442,13 @@ class Templater {
 		return $name;
 
 	}
+
+	/**
+	 * Returns delimiters, escaped by default,
+	 * for use in regular expressions, or raw,
+	 * for use with names depending on the
+	 * tag parameter.
+	 */
 
 	public function delimiters( array $delimiters = [], $tag = 0 )
 	{
@@ -330,31 +466,22 @@ class Templater {
 
 	}
 
-	public function setDirectory( $type, $directory ) {
+	public function setDirectory( $name, $directory ) {
 
-		$property = $type . '_dir';
-		if ( property_exists( $this, $property ) ) {
-			$this->$property = $directory;
-		}
+		$this->directories[ $name ] = $directory;
 
 	}
 
-	public function getDirectory( $type = 'templates' )
+	public function getDirectory( $name )
 	{
 
-		try {
-			if ( ! in_array( $type, [ 'templates', 'compile', 'cache' ] ) ) {
-				throw new TemplaterException( sprintf( 'Unknown type, %s', $type ) );
-			}
-		} catch ( Exception $e ) {
-			return $this->handle( $e );
-		}
-
-		$dir = $type . '_dir';
-		$dir = $this->$dir;
-		return $dir;
+		return $this->directories[ $name ];
 
 	}
+
+	/**
+	 * Determines if a name contains a dot.
+	 */
 
 	public static function hasDot( $name )	
 	{
@@ -362,6 +489,12 @@ class Templater {
 		return false !== strpos( trim( $name, '.' ), '.' );
 
 	}
+
+	/**
+	 * Shifts the first element off of the array
+	 * of a name containing a dot,
+	 * implodes and returns the result.
+	 */
 
 	public static function getShortName( $name )
 	{
@@ -373,6 +506,14 @@ class Templater {
 		return $shortName;
 
 	}
+
+	/**
+	 * The target of the invocation method and,
+	 * the method that will automatically,
+	 * parse the base template and all children
+	 * templates, save the compilation and
+	 * return it.
+	 */
 
 	public function invoke()
 	{
@@ -391,12 +532,22 @@ class Templater {
 
 	}
 
-	public function __invoke( $vars = [], $compile_file = 'compile.php', $print = false )
+	/**
+	 * The invocation method that makes the templater
+	 * object callable. Calls the "invoke" method.
+	 */
+
+	public function __invoke()
 	{
 
-		return $this->invoke( $vars = [], $compile_file, $print );
+		return $this->invoke();
 
 	}
+
+	/**
+	 * Exception are fed into this method,
+	 * to ease detection of throw vs pass.
+	 */
 
 	public function handle( $e, int $handle = 1 )
 	{
