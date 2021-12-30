@@ -59,3 +59,19 @@ If you were using objects created from your databaser, you could do this:
 ```
 
 Notice either syntax above works, the first content.getTitle() calls the getTitle method of the content object, where content.content gets the content property of the content object.
+
+Now, let's say you want to replace variables before templates in all your templates instead of the other way around, you might go about something like that in this fashion:
+
+```php
+use nathanwooten\Templater\Templater;
+
+$templater = new Templater( 'path/to/templates', [ '{{', '}}' ] );
+
+$baseTemplate = $templater->getTemplate();
+
+$baseTemplate = $templater->compileTemplate( $baseTemplate, $templater->getVariables() );
+$baseTemplate = $templater->compileTemplate( $baseTemplate, $templater->getTemplates() );
+
+print $baseTemplate;
+
+```
