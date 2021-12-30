@@ -86,7 +86,7 @@ In a template...
 <html lang="en">
 <head>
 <title><?php
-if ( TITLE === HOME ) {
+if ( '/' === $title ) {
     print 'example.com';
 } else {
     print $title . ' @ example.com';
@@ -98,7 +98,7 @@ This code works perfectly well, so long as the title variable is set in the temp
 ```php
 ...
 
-$templater->setVariable( 'title', $request->getRequestTarget() );
+$templater->setVariable( 'title', 'Your Title Here' );
 
 ...
 ```
