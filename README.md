@@ -2,28 +2,40 @@
 A simple template engine.
 
 ```php
-use Pf\Templater\Template;
-use Pf\Templater\TemplaterEngine;
+use Pf\Templater\Templater;
+use Pf\Templater\TemplaterTemplate as Template;
 
-require_once HBDIR . 'Templater' . DS . 'src' . DS . 'index.php';
+$templater = new Templater( 'path/to/templates', [ '{{', '}}' ] );
 
-$template = [
-
-	'document' => USERDIR . 'static' . DS . 'template' . DS . 'document.php',
-	'header' => USERDIR . 'static' . DS . 'template' . DS . 'header.php',
-	'body' => USERDIR . 'static' . DS . 'template' . DS . 'body.php',
-	'footer' => USERDIR . 'static' . DS . 'template' . DS . 'footer.php',
-
-	'name' => 'Nathan {{last}}',
-	'last' => '"Nate" Wooten'
-
+$templates = [
+    'page' => 'page.php',
+    'header' => 'header.php',
+    'body' => 'body.php',
+    'footer' => 'footer.php'
 ];
 
-foreach ( $template as $name => $source ) {
-	new Template( $name, $source );
-}
+/**
+ * Sets each name/template pair
+ * with setTemplate method, creating
+ * new Template objects
+ */
 
-$doc = TemplaterEngine::get( 'document' );
-$document = $doc->render();
-print $document;
-```
+$templater->setTemplates( $templates );
+
+$templater->setVariable( 'title', 'example.com' );
+
+/**
+ * The base template will always resolve to the first template set
+ */
+
+$baseTemplate = $templater();
+print $baseTemplate;
+
+Say you want to include variables in you templates before other templates. You may do something like this:
+
+$templater = new Templater( 'path/to/templates', [ '{{', '}}' ] );
+
+
+
+
+
