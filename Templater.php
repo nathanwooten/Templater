@@ -6,7 +6,8 @@ use Exception;
 
 use nathanwooten\{
 
-	Templater\TemplaterTrait,
+	Templater\TemplaterItemInterface,
+	Templater\TemplaterException,
 	Templater\TemplaterTemplate as Template,
 	Templater\TemplaterVariable as Variable
 
@@ -46,11 +47,11 @@ class Templater implements TemplaterItemInterface {
 	protected $variables = [];
 
 	/**
-	 * The directory in which
-	 * the template files reside
+	 * The directory(s) in which
+	 * the template file(s) reside
 	 */
 
-	protected $templates_dir;
+	protected $directories = [];
 
 	/**
 	 * The part of a tag that
@@ -78,23 +79,27 @@ class Templater implements TemplaterItemInterface {
 	 * rely on PHP in your templates for variables.
 	 */
 
-	public function __construct( $name = null, $templates_dir = '', array $delimiters = null )
+	public function __construct( $name = null, $directory = null, array $delimiters = null )
 	{
 
 		if ( ! is_null( $name ) ) {
 			$this->name = $name;
 		}
 
-		try {
-			if ( ! is_dir( $templates_dir ) || ! is_readable( $templates_dir ) ) {
-				throw new TemplaterException( sprintf( 'Unreadable template directory, %s', $templates_dir ) );
+		if ( ! is_null( $directory ) ) {
+			try {
+				if ( ! is_dir( $templates_dir ) || ! is_readable( $templates_dir ) ) {
+					throw new TemplaterException( sprintf( 'Unreadable template directory, %s', $templates_dir ) );
+				}
+			} catch( Exception $e ) {
+				$this->handle( $e, 1 );
 			}
-		} catch( TemplaterException $e ) {
-			$this->handle( $e, 1 );
+			$this->directory = $directory;
 		}
 
-		$this->templates_dir = $templates_dir;
-		$this->delimiters = $delimiters;
+		if ( ! is_null( $delimiters ) ) {
+			$this->delimiters = $delimiters;
+		}
 
 	}
 
@@ -284,16 +289,37 @@ class Templater implements TemplaterItemInterface {
 	 * the ouput and saving it to a file.
 	 */
 
-	public function compile( TemplateItemInterface $item, $id = null, $containsPhp = false )
+	public function compile( $item, $id = null, $containsPhp = false )
 	{
-
-		$templateString = $item->get( $id );
 
 		$input = array_merge( $this->getVariables(), $this->getTemplates() );
 
-		$template = $this->compileTemplate( $template, $input );
+		$template = $this->compileTemplate( $item, $input );
 
-		$file = $this->getDirectory() . 'toCompile.php';
+		if ( $this->containsPhp( $item, $containsPhp ) ) {
+
+			$template = $this->compilePhp( $template, $input );
+		}
+
+		return $template;
+
+	}
+
+	/**
+	 * Perform all non-PHP parsing
+	 * compile operations including,
+	 * replacing tags and also, very importantly,
+	 * parsing interior templates
+	 */
+
+	public function compilePhp( $item, array $input = [] )
+	{
+
+		if ( $item instanceof TemplaterItemInterface ) {
+			$name = $item->hasName() ? $item->getName() : 'compilation';
+		}
+
+		$file = $this->getDirectory() . $name . '.php';
 		$put = file_put_contents( $file, $template );
 		if ( ! $put ) {
 			return false;
@@ -311,7 +337,7 @@ class Templater implements TemplaterItemInterface {
 
 		$rendered = ob_get_clean();
 
-		$filename = 'compiled' . '.php';
+		$filename = $name . '.php';
 		$file = $this->getDirectory() . $filename;
 
 		$put = file_put_contents( $file, $rendered );
@@ -320,12 +346,18 @@ class Templater implements TemplaterItemInterface {
 
 	}
 
-	/**
-	 * Perform all non-PHP parsing
-	 * compile operations including,
-	 * replacing tags and also, very importantly,
-	 * parsing interior templates
-	 */
+	public function containsPhp( $item, $default = false )
+	{
+
+		if ( $item instanceof TemplaterItemInterface ) ) {
+			$bool = $item->containsPhp( $default );
+		} else {
+			$bool = $default;
+		}
+
+		return $bool;
+
+	}
 
 	public function compileTemplate( $template, array $input = [], $strip = true )
 	{
@@ -466,16 +498,16 @@ class Templater implements TemplaterItemInterface {
 
 	}
 
-	public function setDirectory( $name, $directory ) {
+	public function setDirectory( $directory ) {
 
-		$this->directories[ $name ] = $directory;
+		$this->directory = $directory;
 
 	}
 
 	public function getDirectory( $name )
 	{
 
-		return $this->directories[ $name ];
+		return $this->directory;
 
 	}
 
