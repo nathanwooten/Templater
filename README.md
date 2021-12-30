@@ -2,8 +2,7 @@
 A simple template engine.
 
 ```php
-use Pf\Templater\Templater;
-use Pf\Templater\TemplaterTemplate as Template;
+use nathanwooten\Templater\Templater;
 
 $templater = new Templater( 'path/to/templates', [ '{{', '}}' ] );
 
@@ -31,11 +30,4 @@ $templater->setVariable( 'title', 'example.com' );
 $baseTemplate = $templater();
 print $baseTemplate;
 
-Say you want to include variables in you templates before other templates. You may do something like this:
-
-$templater = new Templater( 'path/to/templates', [ '{{', '}}' ] );
-
-
-
-
-
+```
