@@ -100,6 +100,8 @@ This code works perfectly well, so long as the template is set and the title var
 ```php
 ...
 
+$templater->setTemplate( 'aboveTemplate', $aboveTemplate );
+
 $templater->setVariable( 'title', 'Your Title Here' );
 
 ...
