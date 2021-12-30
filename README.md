@@ -69,7 +69,7 @@ $templater = new Templater( 'optionalName', 'path/to/templates', [ '{{', '}}' ] 
 
 foreach( $templater->getTemplates() as $template ) {
 
-    $templates[] = $templater->compileTemplate( $template, $templater->getVariables() );
+    $templates[] = $templater->compileTemplate( $template, $templater->getVariables(), false );
 }
 
 $baseTemplate = $templater->compileTemplate( $templater->getTemplate(), $templates );
