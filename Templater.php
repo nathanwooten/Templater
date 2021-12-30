@@ -47,11 +47,13 @@ class Templater implements TemplaterItemInterface {
 	protected $variables = [];
 
 	/**
-	 * The directory(s) in which
-	 * the template file(s) reside
+	 * The directory in which
+	 * the template file(s) reside, optional,
+	 * as long as you provide absolute files,
+	 * in the event this is not provided.
 	 */
 
-	protected $directories = [];
+	protected $directory = '';
 
 	/**
 	 * The part of a tag that
