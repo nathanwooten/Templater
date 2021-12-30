@@ -72,7 +72,7 @@ foreach( $templater->getTemplates() as $template ) {
     $templates[] = $templater->compileTemplate( $template, $templater->getVariables() );
 }
 
-$baseTemplate = $templater->compileTemplate( $baseTemplate, $templates );
+$baseTemplate = $templater->compileTemplate( $templater->getTemplate(), $templates );
 
 print $baseTemplate;
 
