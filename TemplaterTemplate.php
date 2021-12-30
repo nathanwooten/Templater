@@ -97,19 +97,24 @@ class TemplaterTemplate implements TemplaterItemInterface {
 
 	}
 
-	public function hasTemplater()
+	public function setTemplater()
 	{
 
-		return isset( $this->templater );
+		$this->templater = $templater;
 
 	}
 
 	public function getTemplater()
 	{
 
-		if ( $this->hasTemplater() ) {
-			return $this->templater;
-		}
+		return isset( $this->templater ) ? $this->templater : null;
+
+	}
+
+	public function hasTemplater()
+	{
+
+		return isset( $this->templater );
 
 	}
 
