@@ -18,6 +18,8 @@ class TemplaterTemplate implements TemplaterItemInterface {
 	protected $source;
 	protected $template;
 
+	protected $containsPhp = false;
+
 	public function __construct( $name, $template, Templater $templater = null )
 	{
 
@@ -94,6 +96,24 @@ class TemplaterTemplate implements TemplaterItemInterface {
 
 		$dir = $this->getTemplater()->getDirectory();
 		return $dir;
+
+	}
+
+	public function containsPhp( $default = null )
+	{
+
+		if ( $this->hasTemplater() ) {
+			$templater = $this->getTemplater();
+			if ( isset( $templater->containsPhp ) ) {
+				return $templater->containsPhp;
+			}
+		}
+
+		if ( is_null( $default ) ) {
+			return $this->containsPhp;
+		}
+
+		return $this->containsPhp = $default;
 
 	}
 

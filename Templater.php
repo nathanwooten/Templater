@@ -70,6 +70,16 @@ class Templater implements TemplaterItemInterface {
 	 * are thrown or passed
 	 */
 
+	/**
+	 * Flag to 'universally' determine
+	 * whether or not PHP is being used,
+	 * in templates, defaults to null,
+	 * in which case, PHP usage is determined
+	 * on a template by template basis.
+	 */
+
+	protected $containsPhp = null;
+
 	public $handle = 1;
 
 	/**
@@ -89,14 +99,9 @@ class Templater implements TemplaterItemInterface {
 		}
 
 		if ( ! is_null( $directory ) ) {
-			try {
-				if ( ! is_dir( $templates_dir ) || ! is_readable( $templates_dir ) ) {
-					throw new TemplaterException( sprintf( 'Unreadable template directory, %s', $templates_dir ) );
-				}
-			} catch( Exception $e ) {
-				$this->handle( $e, 1 );
-			}
 			$this->directory = $directory;
+		} else {
+			$this->directory = '';
 		}
 
 		if ( ! is_null( $delimiters ) ) {
@@ -286,12 +291,12 @@ class Templater implements TemplaterItemInterface {
 
 	/**
 	 * Compile a template, including replacing
-	 * tags with templates and variables and 
+	 * tags with templates and variables and
 	 * running the PHP in the template and capturing
 	 * the ouput and saving it to a file.
 	 */
 
-	public function compile( $item, $id = null, $containsPhp = false )
+	public function compile( $item, $id = null, $containsPhp = null )
 	{
 
 		$input = array_merge( $this->getVariables(), $this->getTemplates() );
@@ -317,8 +322,13 @@ class Templater implements TemplaterItemInterface {
 	public function compilePhp( $item, array $input = [] )
 	{
 
+		$name = 'compilation';
+
 		if ( $item instanceof TemplaterItemInterface ) {
-			$name = $item->hasName() ? $item->getName() : 'compilation';
+			$name = $item->hasName() ? $item->getName() : $name;
+			$template = $item->get();
+		} else {
+			$template = $item;
 		}
 
 		$file = $this->getDirectory() . $name . '.php';
@@ -351,7 +361,11 @@ class Templater implements TemplaterItemInterface {
 	public function containsPhp( $item, $default = false )
 	{
 
-		if ( $item instanceof TemplaterItemInterface ) ) {
+		if ( isset( $this->containsPhp ) ) {
+			return $this->containsPhp;
+		}
+
+		if ( $item instanceof TemplaterItemInterface ) {
 			$bool = $item->containsPhp( $default );
 		} else {
 			$bool = $default;
@@ -389,7 +403,7 @@ class Templater implements TemplaterItemInterface {
 				$match = $input[ $startName ];
 
 				if ( $match instanceof Template ) {
-					$match->setTemplate( $this->compileTemplate( $match, $input ) );
+					$match->setTemplate( $this->compile( $match, $input ) );
 				}
 
 				$value = $match->get( $shortName );
@@ -506,7 +520,7 @@ class Templater implements TemplaterItemInterface {
 
 	}
 
-	public function getDirectory( $name )
+	public function getDirectory()
 	{
 
 		return $this->directory;
