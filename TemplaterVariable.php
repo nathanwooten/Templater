@@ -102,6 +102,37 @@ class TemplaterVariable implements TemplaterItemInterface {
 
 	}
 
+	public function setName( $name )
+	{
+
+		$this->name = $name;
+		if ( $this->hasTemplater() ) {
+			$templater = $this->getTemplater();
+
+			if ( ! $templater->has( $name ) ) {
+				$templater->setVariable( $name, $this );
+
+			}
+		}
+
+		return $this;
+
+	}
+
+	public function getName()
+	{
+
+		return isset( $this->name ) ? $this->name : null;
+
+	}
+
+	public function hasName()
+	{
+
+		return isset( $this->name );
+
+	}
+
 	public function isMethod( $object, $name ) {
 
 		if ( false !== strpos( $i, '(' ) || false !== strpos( $i, ')' ) ) {
@@ -149,27 +180,6 @@ class TemplaterVariable implements TemplaterItemInterface {
 
 	}
 
-	public function setName( $name )
-	{
-
-		$this->name = $name;
-		if ( $this->hasTemplater() ) {
-			if ( ! $this->templater()->has( $name ) ) {
-				$this->templater->setVar( $name, $this );
-			}
-		}
-
-		return $this;
-
-	}
-
-	public function getName()
-	{
-
-		return $this->name;
-
-	}
-
 	public function setValue( $value )
 	{
 
@@ -186,12 +196,17 @@ class TemplaterVariable implements TemplaterItemInterface {
 
 	}
 
+	public function setTemplater( $templater = null )
+	{
+
+		$this->templater = $templater;
+
+	}
+
 	public function getTemplater()
 	{
 
-		if ( isset( $this->templater ) ) {
-			return $this->templater;
-		}
+		return isset( $this->templater ) ? $this->templater : null;
 
 	}
 
@@ -199,7 +214,7 @@ class TemplaterVariable implements TemplaterItemInterface {
 	{
 
 		return isset( $this->templater );
-	
+
 	}
 
 	public function __toString()

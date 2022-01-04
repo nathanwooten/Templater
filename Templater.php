@@ -126,6 +126,40 @@ class Templater implements TemplaterItemInterface {
 
 	}
 
+	public function has( $name ) {
+
+		if ( array_key_exists( $name, $this->templates ) ) {
+			return true;
+		}
+
+		return false;
+
+	}
+
+
+	public function setName( $name )
+	{
+
+		$this->name = $name;
+
+		return $this;
+
+	}
+
+	public function getName()
+	{
+
+		return isset( $this->name ) ? $this->name : null;
+
+	}
+
+	public function hasName()
+	{
+
+		return isset( $this->name );
+
+	}
+
 	/**
 	 * Set a template, in the form of,
 	 * a template object, a template string, or
@@ -331,7 +365,7 @@ class Templater implements TemplaterItemInterface {
 			$template = $item;
 		}
 
-		$file = $this->getDirectory() . $name . '.php';
+		$file = $this->getDirectory() . 'toCompile_' . $name . '.php';
 		$put = file_put_contents( $file, $template );
 		if ( ! $put ) {
 			return false;
@@ -349,7 +383,7 @@ class Templater implements TemplaterItemInterface {
 
 		$rendered = ob_get_clean();
 
-		$filename = $name . '.php';
+		$filename = 'compiled_' . $name . '.php';
 		$file = $this->getDirectory() . $filename;
 
 		$put = file_put_contents( $file, $rendered );
@@ -358,20 +392,30 @@ class Templater implements TemplaterItemInterface {
 
 	}
 
-	public function containsPhp( $item, $default = false )
+	public function containsPhp( $default = null, $item = null )
 	{
 
-		if ( isset( $this->containsPhp ) ) {
-			return $this->containsPhp;
-		}
+		if ( ! is_null( $default ) ) {
 
-		if ( $item instanceof TemplaterItemInterface ) {
-			$bool = $item->containsPhp( $default );
+			if ( is_null( $item ) || ! $item instanceof TemplaterItemInterface ) {
+				return $this->containsPhp = $default;
+
+			} else {
+				$containsPhp = $item->containsPhp( $default, true );				
+				return $containsPhp;
+
+			}
+
 		} else {
-			$bool = $default;
-		}
 
-		return $bool;
+			if ( isset( $this->containsPhp ) ) {
+				return $this->containsPhp;
+
+			} else {
+				return $default;
+
+			}
+		}
 
 	}
 
@@ -379,10 +423,12 @@ class Templater implements TemplaterItemInterface {
 	{
 
 		if ( $template instanceof Template ) {
-			$template = $template->getTemplate();
+			$templateString = $template->getTemplate();
+		} else {
+			$templateString = $template;
 		}
 
-		$matches = $this->match( $template );
+		$matches = $this->match( $templateString );
 		foreach ( $matches as $tag ) {
 
 			$name = $this->remove( $tag );
@@ -413,8 +459,14 @@ class Templater implements TemplaterItemInterface {
 				$value = '';
 			}
 
-			$template = $this->compileReplace( $name, $value, $template );
+			$templateString = $this->compileReplace( $name, $value, $templateString );
 
+		}
+
+		if ( $template instanceof Template ) {
+			$template->setTemplate( $templateString );
+		} else {
+			$template = $templateString;
 		}
 
 		return $template;

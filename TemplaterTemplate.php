@@ -48,13 +48,30 @@ class TemplaterTemplate implements TemplaterItemInterface {
 	{
 
 		$this->name = $name;
+		if ( $this->hasTemplater() ) {
+			$templater = $this->getTemplater();
+
+			if ( ! $templater->has( $name ) ) {
+				$templater->setVariable( $name, $this );
+
+			}
+		}
+
+		return $this;
 
 	}
 
 	public function getName()
 	{
 
-		return $this->name;
+		return isset( $this->name ) ? $this->name : null;
+
+	}
+
+	public function hasName()
+	{
+
+		return isset( $this->name );
 
 	}
 
@@ -102,11 +119,11 @@ class TemplaterTemplate implements TemplaterItemInterface {
 	public function containsPhp( $default = null )
 	{
 
-		if ( $this->hasTemplater() ) {
+		$args = func_get_args();
+		if ( ! isset( $args[1] ) && $this->hasTemplater() ) {
+
 			$templater = $this->getTemplater();
-			if ( isset( $templater->containsPhp ) ) {
-				return $templater->containsPhp;
-			}
+			return $templater->containsPhp( $default, $this );
 		}
 
 		if ( is_null( $default ) ) {
@@ -117,7 +134,7 @@ class TemplaterTemplate implements TemplaterItemInterface {
 
 	}
 
-	public function setTemplater()
+	public function setTemplater( $templater = null )
 	{
 
 		$this->templater = $templater;
@@ -135,6 +152,18 @@ class TemplaterTemplate implements TemplaterItemInterface {
 	{
 
 		return isset( $this->templater );
+
+	}
+
+	public function __toString()
+	{
+
+		$value = $this->get();
+		if ( ! is_string( $value ) ) {
+			return '';
+		}
+
+		return $value;
 
 	}
 
