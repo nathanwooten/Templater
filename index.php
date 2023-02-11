@@ -1,9 +1,11 @@
 <?php
 
-$dir = dirname( __FILE__ ) . DIRECTORY_SEPARTOR;
+$dir = dirname( __FILE__ );
+$file = basename( __FILE__ );
 
-require_once $dir . 'TemplaterException.php';
-require_once $dir . 'TemplaterItemInterface.php';
-require_once $dir . 'Templater.php';
-require_once $dir . 'TemplaterTemplate.php';
-require_once $dir . 'TemplaterVariable.php';
+foreach ( scandir( $dir ) as $item ) {
+  if ( '.' === $item || '..' === $item || $file === $item ) {
+    continue; 
+  }
+  require_once $dir . DIRECTORY_SEPARTOR . $item;
+}
