@@ -97,6 +97,21 @@ class View extends Type implements ViewInterface
   }
 
   /**
+   * Contain an array of views
+   */
+
+  public function contain( array $container )
+  {
+
+    foreach ( $container as $key => $item ) {
+      $this->setView( $item, is_string( $key ) ? $key : null );
+    }
+
+    return $this;
+
+  }
+
+  /**
    * Set this view's template
    */
 
@@ -186,6 +201,11 @@ class View extends Type implements ViewInterface
 
   }
 
+  /**
+   * Get the callback that
+   * generates the response
+   */
+
   public function getCallback()
   {
 
@@ -196,6 +216,11 @@ class View extends Type implements ViewInterface
     return $this->callback;
 
   }
+
+  /**
+   * Set the response directly
+   * you can use this to circumvent the callback
+   */
 
   public function setResponse( string $response )
   {
@@ -239,29 +264,97 @@ class View extends Type implements ViewInterface
   }
 
   /**
-   * Set a child view to be parsed
-   * when the response callback is called
+   * Set the parent view object
    */
 
-  public function setView( ViewInterface $view )
+  public function setParent( ViewInterface $view )
   {
 
-    $this->views[] = $view;
+    $this->parent = $view;
+
+    return $this;
 
   }
 
   /**
-   * Fetch a child view by ID
+   * Get this views parent object
    */
 
-  public function getView( $id )
+  public function getParent()
   {
 
-    foreach ( $this->views as $view ) {
+    return $this->parent;
+
+  }
+
+  /**
+   * Check that this view has a parent
+   */
+
+  public function hasParent()
+  {
+
+    return isset( $this->parent );
+
+  }
+
+  /**
+   * Set a view, takes mixed as input
+   * optionally set an id if you don't
+   * want to use the standard class name as an id
+   */
+
+  public function setView( $view, $id = null )
+  {
+
+    if ( ! is_object( $view ) ) {
+      if ( class_exists( $view ) ) {
+        $class = $view;
+        $template = null;
+      } else {
+        $class = View::class;
+        $template = $view;
+      }
+
+      $view = Factory::create( $class, new Injections( null, [ 'initParts' => [ null, $template ] ] ) );
+    }
+
+    if ( ! is_null( $id ) ) {
+      $view->setId( $id );
+    }
+
+    $this->views[] = $view;
+	$view->setParent( $this );
+
+    return $this;
+
+  }
+
+  /**
+   * get a View object from
+   * the views container, by id
+   */
+
+  public function getView( $id = null )
+  {
+
+    $container = $this->getViews();
+
+    while( ! empty( $container ) ) {
+      $view = array_shift( $container );
+
       if ( $id === $view->getId() ) {
-        return $view;
+        break;
+      } else {
+        $view = null;
       }
     }
+
+    if ( ! isset( $view ) ) {
+      return;
+    }
+
+    return $view;
 
   }
 
