@@ -67,4 +67,4 @@ print $view;
 
 <h1>Hello World</h1>
 
-This is a hello world document. The date is 2/11/2023
+This is a hello world document. The date is: 2/11/2023
