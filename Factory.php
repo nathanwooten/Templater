@@ -39,11 +39,11 @@ class Factory extends Type
   public static function isView( $data )
   {
 
-    return static::isA( $data ) || static::isInstanceOfView( $data );
+    return static::isSubClassOf( $data ) || static::isInstanceOfView( $data );
 
   }
 
-  public static function isA( $class, $a = View::class )
+  public static function isSubClassOf( $class, $a = View::class )
   {
 
     if ( ! is_string( $class ) ) {
