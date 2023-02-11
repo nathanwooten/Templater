@@ -7,24 +7,58 @@ use Exception;
 use nathanwooten\View\{
 
   ViewInterface,
-  Type,
-  Commission
+  Type
 
 };
 
+/**
+ * View class defines the elements of a view including
+ * template, id, parent, children, callback, response, etc
+ */
+
+if ( ! class_exists( 'nathanwooten\View\View' ) ) {
 class View extends Type implements ViewInterface
 {
 
-  use Commission;
+  /**
+   * The callback to generate the view response
+   * if not set, the Compiler::compile method is called
+   */
 
-  protected $response;
+  protected $callback;
+
+  /**
+   * The ouput of the view after compilation
+   * it is a string
+   * to be passed the Response object
+   */
+
+  protected string $response;
+
+  /**
+   * This is the view's parent
+   */
 
   protected ?ViewInterface $parent = null;
+
+  /**
+   * The ID and actual template
+   * of the view
+   */
 
   protected ?string $id = null;
   protected ?string $template = null;
 
+  /**
+   * An array of children views
+   */
+
   protected array $views = [];
+
+  /**
+   * The compiler object which
+   * hooks into the actions
+   */
 
   protected $compiler = Compiler::class;
 
@@ -141,26 +175,49 @@ class View extends Type implements ViewInterface
    * to a Response object
    */
 
-  public function setResponse( callable $callback = null )
+  public function setCallback( callable $callback = null )
   {
 
     if ( is_null( $callback ) ) {
       $callback = [ $this->getCompiler( $this->compiler ), 'compile' ];
     }
 
-    $this->response = $callback;
+    $this->callback = $callback;
 
   }
+
+  public function getCallback()
+  {
+
+    if ( ! isset( $this->callback ) ) {
+      return null;
+    }
+
+    return $this->callback;
+
+  }
+
+  public function setResponse( string $response )
+  {
+
+    $this->response = $response;
+
+  }
+
+  /**
+   * If response is set, return it,
+   * if not set, and callback is set,
+   * call callback and set it to response
+   */
 
   public function getResponse()
   {
 
     if ( ! isset( $this->response ) ) {
-      $this->setResponse();
-    }
-
-    if ( is_callable( $this->response ) ) {
-      $callback = $this->response;
+      if ( ! isset( $this->callback ) ) {
+         $this->setCallback();
+      }
+      $callback = $this->callback;
 
       $this->response = $callback();
     }
@@ -169,12 +226,129 @@ class View extends Type implements ViewInterface
 
   }
 
+  /**
+   * Check that a value
+   * has been set to response property
+   */
+
   public function hasResponse()
   {
 
     return ! is_null( $this->response );
 
   }
+
+  /**
+   * Set a child view to be parsed
+   * when the response callback is called
+   */
+
+  public function setView( ViewInterface $view )
+  {
+
+    $this->views[] = $view;
+
+  }
+
+  /**
+   * Fetch a child view by ID
+   */
+
+  public function getView( $id )
+  {
+
+    foreach ( $this->views as $view ) {
+      if ( $id === $view->getId() ) {
+        return $view;
+      }
+    }
+
+  }
+
+  /**
+   * Find whether or not a child view exists
+   */
+
+  public function hasView( $id )
+  {
+
+    foreach ( $this->views as $view ) {
+      if ( $id === $view->getId() ) {
+        return true;
+      }
+    }
+
+    return false;
+
+  }
+
+  /**
+   * Set an array of views
+   * does not reset
+   */
+
+  public function setViews( array $views )
+  {
+
+    foreach ( $views as $view ) {
+      $this->setView( $view );
+    }
+
+  }
+
+  /**
+   * Return the views array
+   */
+
+  public function getViews()
+  {
+
+    return $this->views;
+
+  }
+
+  /**
+   * Check that the views property isn't empty
+   */
+
+  public function hasViews()
+  {
+
+    return ! empty( $this->views );
+
+  }
+
+  /**
+   * Unset a specific view
+   */
+
+  public function unsetView( $id )
+  {
+
+    foreach ( $this->views as $index => $view ) {
+      if ( $id === $view->getId() ) {
+        unset( $this->views[ $index ] );
+
+        break;
+      }
+    }
+
+  }
+
+  /**
+   * Unset all views
+   */
+
+  public function unsetViews()
+  {
+
+    $this->views = [];
+
+  }
+
+  /**
+   * Get this view's instance of the compiler
+   */
 
   public function getCompiler( $class = null )
   {
@@ -193,7 +367,11 @@ class View extends Type implements ViewInterface
 
   }
 
-  public function __toString()
+  /**
+   * All views must be stringable
+   */
+
+  public function __toString() : string
   {
 
     $response = (string) $this->getResponse();
@@ -203,337 +381,4 @@ class View extends Type implements ViewInterface
 
 
 }
-
-/*
-class View implements ViewInterface
-{
-
-  public string $response = '';
-
-  protected $id;
-  protected $view;
-
-  protected $commissioner = null;
-  protected $parent = null;
-  protected ?array $container = null;
-
-  public function __construct( $id = null, string $view = null, ?array $container = null, ViewInterface $commissioner = null )
-  {
-
-    $this->id = $id ?? ( isset( $this->id ) ? $this->id : null );
-    $this->commissioner = $commissioner ?? $this->commissioner;
-
-    $this->view = $view ?? $this->view;
-
-    if ( $this->isView( $this->get() ) ) {
-      $this->delegate( $this );
-
-    } else {
-      if ( ! is_null( $this->container ) ) {
-        $this->contain();
-      }
-
-    }
-
-  }
-
-  public function getId()
-  {
-
-    return $this->id ?? basename( get_class( $this ) );
-
-  }
-
-  public function setId( $id )
-  {
-
-    $this->id = $id;
-
-  }
-
-  public function setResponse( ?string $response = null )
-  {
-
-    $this->response = $response;
-
-  }
-
-  public function getResponse()
-  {
-
-    $view = $this;
-    while ( $view->hasDelegate() ) {
-      $view = $view->getDelegate();
-    }
-
-    $response = is_null( $view->response ) || empty( $view->response ) ? '' : $view->response;
-
-    return $response;
-
-  }
-
-  public function run()
-  {
-
-    $response = $this->getResponse();
-    if ( is_null( $response ) || empty( $response ) ) {
-      $this->compiler()->compile();
-    }
-
-    return $this->getResponse();
-
-  }
-
-  public function compiler()
-  {
-
-    $compiler = new ViewCompiler( $this );
-    return $compiler;
-
-  }
-
-  public function set( $view )
-  {
-
-    $this->view = $view;
-
-  }
-
-  public function get()
-  {
-
-    return $this->view;
-
-  }
-
-  public function setView( $view, $id = null )
-  {
-
-    if ( ! is_object( $view ) ) {
-      $view = $this->create( $view );
-    }
-
-    $this->container[] = $view;
-    if ( $id ) {
-      $view->setId( $id );
-    }
-
-    $view->setParent( $this );
-
-  }
-
-  public function getView( $id = null )
-  {
-
-    $container = $this->container;
-
-    while( $container ) {
-      $view = array_shift( $container );
-
-      if ( $id === $view->getId() ) {
-        break;
-      } else {
-        $view = null;
-      }
-    }
-
-    if ( ! isset( $view ) ) {
-      return;
-    }
-
-    return $view;
-
-  }
-
-  public function hasView( $id )
-  {
-
-    return $this->getView( $id );
-
-  }
-
-  public function getViews()
-  {
-
-    return isset( $this->container ) ? $this->container : [];
-
-  }
-
-  public function setViews( ?array $container = null )
-  {
-
-    $this->container = $container;
-
-  }
-
-  public function unsetViews()
-  {
-
-    unset( $this->container );
-
-  }
-
-  public function contain( ?array $container = null )
-  {
-
-    if ( is_null( $container ) ) {
-      if ( is_null( $this->container ) ) {
-        return;
-      }
-      $container = $this->container;
-
-    } elseif ( ! is_null( $this->container ) ) {
-      foreach ( $this->container as $item ) {
-        $container[] = $item;
-      }
-
-    } else {
-      return;
-    }
-
-    $this->setViews( [] );
-
-    foreach ( $container as $key => $item ) {
-
-      if ( ! is_object( $item ) ) {
-
-        $item = (array) $item;
-        $item = $this->create( ...$item );
-
-        $item->setParent( $this );
-
-        $id = null;
-        if ( is_string( $key ) ) {
-          $id = $key;
-        }
-
-        $this->setView( $item, $id );
-      }
-    }
-
-    return $this;
-
-  }
-
-  public function setParent( View $view )
-  {
-
-    $this->parent = $view;
-
-  }
-
-  public function getParent()
-  {
-
-    return $this->parent;
-
-  }
-
-  public function setCommissioner( ViewInterface $view )
-  {
-
-    $this->commissioner = $view;
-
-  }
-
-  public function getCommissioner()
-  {
-
-    return $this->commissioner ?? null;
-
-  }
-
-  public function hasCommissioner()
-  {
-
-    return isset( $this->commissioner );
-
-  }
-
-  public function getDelegate()
-  {
-
-    return $this->get();
-
-  }
-
-  public function hasDelegate()
-  {
-
-    return $this->isView( $this->get() );
-
-  }
-
-  public function delegate( $view )
-  {
-
-    if ( ! $view instanceof self ) {
-      throw new Exception( 'Can not delegate non-view, ' . gettype( $view ) );
-    }
-
-    $commissioner = $delegate = $view;
-
-    $container = $view->getViews();
-    $view->setViews( [] );
-
-    while ( $this->isView( $commissioner->get() ) ) {
-
-      $got = $commissioner->get();
-
-      if ( ! is_object( $got ) ) {
-        $delegate = $this->create( $got );
-      } else {
-        $delegate = $got;
-      }
-
-      $commissioner->set( $delegate );
-	  $delegate->setCommissioner( $commissioner );
-
-      $views = (array) $commissioner->getViews();
-      foreach ( $views as $view ) {
-        $container[] = $view;
-      }
-
-      $commissioner = $delegate;
-    }
-
-    $delegate->setViews( $container );
-    $delegate->contain();
-
-    return $delegate;
-
-  }
-
-  public static function isView( $view )
-  {
-
-    return ( is_string( $view ) && class_exists( $view ) ) || ( is_object( $view ) && $view instanceof View );
-
-  }
-
-  public static function create( $view, ?array $args = null )
-  {
-
-    if ( ! static::isView( $view ) ) {
-      $view = new self( null, $view );
-    } else {
-      $view = new $view( ...array_values( (array) $args ) );
-    }
-
-    if ( ! $view instanceof View ) {
-      throw new Exception( 'A view must be a View object, processed type: ' . gettype( $view ) );
-    }
-
-    return $view;
-
-  }
-
-  public function __toString()
-  {
-
-    $string = $this->run();
-    return $string;
-
-  }
-
-}*/
+}
