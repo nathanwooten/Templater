@@ -24,7 +24,7 @@ print $view;
 
 ### Outputs
 
-#Hello World
+<h1>Hello World</h1>
 
 This is a hello world document.
 
@@ -65,6 +65,6 @@ print $view;
 
 ### Outputs
 
-#Hello World
+<h1>Hello World</h1>
 
 This is a hello world document. The date is 2/11/2023
