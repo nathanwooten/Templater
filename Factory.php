@@ -50,7 +50,7 @@ class Factory extends Type
       return false;
     }
 
-    return is_a( $class, $a );
+    return is_subclass_of( $class, $a );
 
   }
 
